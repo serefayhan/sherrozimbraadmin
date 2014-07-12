@@ -1,0 +1,42 @@
+form label{
+    display: block;
+}
+fieldset{
+    padding-left: 20px;
+    padding-bottom: 10px;
+    text-align: left;
+}
+fieldset form label{
+    display: inline;
+}
+label.error{
+    color: red;
+    font-style: italic;
+}
+.no-close .ui-dialog-titlebar-close {
+    display: none;
+}
+.left-align{
+    text-align: left;
+}
+#loadingoverlay{
+    position: absolute;
+    z-index: 999999998;
+}
+#loadingmessage{
+    background-image: url("../img/loading.gif");
+    background-repeat: no-repeat;
+    background-position: center center;
+    height: 50px;
+    position: relative;
+    width: 50px;
+    z-index: 999999999;
+}
+#showdistributionlistmembersdialog .ui-autocomplete{
+    text-align: left;
+}
+#notification{
+    display: none;
+    position: absolute;
+    z-index: 999999999;
+}

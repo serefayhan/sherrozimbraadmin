@@ -1,0 +1,882 @@
+<?php
+
+/**
+ * Zm_Account
+ *
+ * @author Yannick Lorenz <ylorenz@1g6.biz>
+ * @author Fabrizio La Rosa <fabrizio.larosa@unime.it>
+ * @version 2.0
+ * @copyright Copyright (c) 2009, Yannick Lorenz
+ * @copyright Copyright (c) 2012, Fabrizio La Rosa
+ * @package ZimbraSoapPhp
+ */
+
+// utils.php contains a small collection of useful functions
+//require_once ("utils.php");
+
+/**
+ * Zm_Account is a class which allows to manage Zimbra accounts via SOAP
+ *
+ * You may create, modify, rename, delete and get the attributes of a Zimbra account using this class
+ *
+ * For the usage examples of all class methods check the source code of test.php
+ */
+class Zm_Account
+{
+	/**
+	 * $auth
+	 * @var Zm_Auth $auth soap authentication
+	 */
+	private $auth;
+
+	/**
+	 * Constructor
+	 * @param Zm_Auth $auth soap authentication
+	 */
+	function __construct($auth)
+	{
+		$this->auth = $auth;
+	}
+	
+	/**
+	 * getQuotaUsage
+	 *
+	 */
+	function getQuotaUsage($domain)
+	{
+		$result = null;
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetQuotaUsageRequest  offset='0' domain='$domain' sortBy='percentUsed'"
+			);
+			
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['GETQUOTAUSAGERESPONSE'];
+		}
+		catch (SoapFault $exception) 
+		{
+			print_exception($exception);
+		}
+		
+		return $result;
+	}
+
+	/**
+	 * getAllAccounts
+	 * @param string $idOrNameDomain domain id or domain name
+	 * @param string $type value of the domain (auto, name, id)
+	 * @return array informations
+	 */
+	function getAllAccounts($idOrNameDomain, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getDomainType($idOrNameDomain);
+		else
+			$realType = $type;
+
+		$result = null;
+
+		$params = array(
+			new SoapVar('<domain by="' . $realType . '">' . $idOrNameDomain . '</domain>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAllAccountsRequest",
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['GETALLACCOUNTSRESPONSE']['ACCOUNT'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * getAccountId
+	 * @param string $name account name
+	 * @return string account id
+	 */
+	function getAccountId($name)
+	{
+		$result = null;
+
+		$params = array(
+			new SoapVar('<account by="name">' . $name . '</account>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAccountInfoRequest",
+				$params
+			);
+
+			$result = getSoapAttribute($result['SOAP:ENVELOPE']['SOAP:BODY']['GETACCOUNTINFORESPONSE']['A'], "zimbraId");
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * accountExists
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return bool exists
+	 */
+	function accountExists($idOrNameAccount, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		$result = null;
+
+		$params = array(
+			new SoapVar('<account by="' . $realType . '">' . $idOrNameAccount . '</account>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAccountInfoRequest",
+				$params
+			);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return (!is_a($result, "Exception"));
+	}
+
+	/**
+	 * getAccountInfo
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function getAccountInfo($idOrNameAccount, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		$result = null;
+
+		$params = array(
+			new SoapVar('<account by="' . $realType . '">' . $idOrNameAccount . '</account>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAccountInfoRequest",
+				$params
+			);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * getAccountOption
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $optName name of the option to get
+	 * @param int $multisingle (ATTR_SINGLEVALUE, ATTR_MULTIVALUE)
+	 * @param string $type value of the account (auto, name, id)
+	 * @return string option
+	 */
+	function getAccountOption($idOrNameAccount, $optName, $multisingle=ATTR_SINGLEVALUE, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		$result = null;
+
+		$params = array(
+			new SoapVar('<account by="' . $realType . '">' . $idOrNameAccount . '</account>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAccountRequest",
+				$params
+			);
+
+			$result = getSoapAttribute($result['SOAP:ENVELOPE']['SOAP:BODY']['GETACCOUNTRESPONSE']['ACCOUNT']['A'], $optName, $multisingle);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * getAccountOptions
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array options
+	 */
+	function getAccountOptions($idOrNameAccount, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		$result = null;
+
+		$params = array(
+			new SoapVar('<account by="' . $realType . '">' . $idOrNameAccount . '</account>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAccountRequest",
+				$params
+			);
+
+			$attrs = array();
+			foreach ($result['SOAP:ENVELOPE']['SOAP:BODY']['GETACCOUNTRESPONSE']['ACCOUNT']['A'] as $a) {
+				$attrs[$a['N']] = $a['DATA'];
+			}
+			$result = $attrs;
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * createAccount
+	 * @param string $name account name
+	 * @param string $password password
+	 * @param array $attrs an optional array containing the account attributes to be set
+	 * @return string the new account's id
+	 */
+	function createAccount($name, $password, $attrs = array())
+	{
+		$result = null;
+
+		$params = array(
+			new SoapParam($name, "name"),
+			new SoapParam($password, "password"),
+		);
+		foreach ($attrs as $key=>$value)
+			$params[] = new SoapVar('<a n="' . $key . '">' . $value . '</a>', XSD_ANYXML);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"CreateAccountRequest",
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['CREATEACCOUNTRESPONSE']['ACCOUNT']['ID'];
+			usleep(250000); // introduce a small delay, otherwise some troubles may arise if we modify the new account right after its creation
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * setAccountPassword
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $password password
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function setAccountPassword($idOrNameAccount, $password, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		if($realType == "name")
+			$accountId = $this->getAccountId($idOrNameAccount);
+		else
+			$accountId = $idOrNameAccount;
+
+		$result = null;
+
+		$params = array(
+			new SoapParam($accountId, "id"),
+			new SoapParam($password, "newPassword"),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"SetPasswordRequest",
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['SETPASSWORDRESPONSE'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * modifyAccount
+	 * @param string $idOrNameAccount account id or account name
+	 * @param array $attrs an array containing the account attributes to be set
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function modifyAccount($idOrNameAccount, $attrs = array(), $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		if($realType == "name")
+			$accountId = $this->getAccountId($idOrNameAccount);
+		else
+			$accountId = $idOrNameAccount;
+
+		$result = null;
+
+		$params = array(
+			new SoapParam($accountId, "id"),
+		);
+		foreach ($attrs as $key=>$value)
+			$params[] = new SoapVar('<a n="' . $key . '">' . $value . '</a>', XSD_ANYXML);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"ModifyAccountRequest",
+				$params
+			);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * renameAccount
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $newName new account name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function renameAccount($idOrNameAccount, $newName, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		if($realType == "name")
+			$accountId = $this->getAccountId($idOrNameAccount);
+		else
+			$accountId = $idOrNameAccount;
+
+		$result = null;
+
+		$params = array(
+			new SoapParam($accountId, "id"),
+			new SoapParam($newName, "newName"),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"RenameAccountRequest",
+				$params
+			);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * deleteAccount
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function deleteAccount($idOrNameAccount, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		if($realType == "name")
+			$accountId = $this->getAccountId($idOrNameAccount);
+		else
+			$accountId = $idOrNameAccount;
+
+		$result = null;
+
+		$params = array(
+			new SoapParam($accountId, "id"),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"DeleteAccountRequest",
+				$params
+			);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * getAccountAliases
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array aliases
+	 */
+	function getAccountAliases($idOrNameAccount, $type="auto")
+	{
+		return $this->getAccountOption($idOrNameAccount, "zimbraMailAlias", ATTR_MULTIVALUE, $type);
+	}
+
+	/**
+	 * addAccountAlias
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $alias account alias
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function addAccountAlias($idOrNameAccount, $alias, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		if($realType == "name")
+			$accountId = $this->getAccountId($idOrNameAccount);
+		else
+			$accountId = $idOrNameAccount;
+
+		$result = null;
+
+		$params = array(
+			new SoapParam($accountId, "id"),
+			new SoapParam($alias, "alias"),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"AddAccountAliasRequest",
+				$params
+			);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * removeAccountAlias
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $alias account alias
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function removeAccountAlias($idOrNameAccount, $alias, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		if($realType == "name")
+			$accountId = $this->getAccountId($idOrNameAccount);
+		else
+			$accountId = $idOrNameAccount;
+
+		$result = null;
+
+		$params = array(
+			new SoapParam($accountId, "id"),
+			new SoapParam($alias, "alias"),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"RemoveAccountAliasRequest",
+				$params
+			);
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * getAccountStatus
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return string status
+	 */
+	function getAccountStatus($idOrNameAccount, $type="auto")
+	{
+		return $this->getAccountOption($idOrNameAccount, "zimbraAccountStatus", ATTR_SINGLEVALUE, $type);
+	}
+
+	/**
+	 * setAccountStatus
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $status the status (active, maintenance, pending, locked, closed)
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function setAccountStatus($idOrNameAccount, $status, $type = "auto")
+	{
+		$hideInGAL = ($status == "active") ? "FALSE" : "TRUE";
+		$attrs = array(
+			"zimbraAccountStatus"=>$status,
+			"zimbraHideInGal"=>$hideInGAL,
+		);
+
+		$result = $this->modifyAccount($idOrNameAccount, $attrs, $type);
+
+		return $result;
+	}
+
+	/**
+	 * getAccountCos
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $returnType get the COS ID or NAME
+	 * @param string $type value of the account (auto, name, id)
+	 * @return string COS id or name
+	 */
+	function getAccountCos($idOrNameAccount, $returnType = "NAME", $type = "auto")
+	{
+		if($type == "auto")
+			$realType = getAccountType($idOrNameAccount);
+		else
+			$realType = $type;
+
+		if($realType == "name")
+			$accountId = $this->getAccountId($idOrNameAccount);
+		else
+			$accountId = $idOrNameAccount;
+
+		$result = null;
+
+		$params = array(
+			new SoapVar('<account by="' . $realType . '">' . $idOrNameAccount . '</account>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAccountInfoRequest",
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['GETACCOUNTINFORESPONSE']['COS'][$returnType];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+
+	/**
+	 * setAccountCos
+	 * @param string $idOrNameAccount account id or account name
+	 * @param string $cosName the COS name
+	 * @param string $type value of the account (auto, name, id)
+	 * @return array informations
+	 */
+	function setAccountCos($idOrNameAccount, $cosName, $type = "auto")
+	{
+		$cosId = $this->getCosId($cosName);
+		$attrs = array("zimbraCOSId"=>$cosId);
+
+		$result = $this->modifyAccount($idOrNameAccount, $attrs, $type);
+
+		return $result;
+	}
+
+	/**
+	 * getCosId
+	 * @param string $name the COS name
+	 * @return string COS id
+	 */
+	function getCosId($name)
+	{
+		$result = null;
+
+		$params = array(
+			new SoapVar('<cos by="name">' . $name . '</cos>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetCosRequest",
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['GETCOSRESPONSE']['COS']['ID'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * Distribution List Functions 
+	 * Seref AYHAN <ben@serefayhan.com>
+	 */
+	
+	/**
+	 * getAllDistributionLists
+	 * @param string $idOrNameDomain domain id or domain name
+	 * @param string $type value of the domain (auto, name, id)
+	 * @return array informations
+	 */
+	function getAllDistributionLists($idOrNameDomain, $type="auto")
+	{
+		if($type == "auto")
+			$realType = getDomainType($idOrNameDomain);
+		else
+			$realType = $type;
+
+		$result = null;
+
+		$params = array(
+			new SoapVar('<domain by="' . $realType . '">' . $idOrNameDomain . '</domain>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				"GetAllDistributionListsRequest",
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['GETALLDISTRIBUTIONLISTSRESPONSE'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * createDistributionList
+	 * @param string $nameDistributionList name of the distribution list
+	 * @return array informations
+	 */
+	function createDistributionList($nameDistributionList)
+	{
+		$result = null;
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				'CreateDistributionListRequest name="'.$nameDistributionList.'" dynamic="0"'
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY'];//['CREATEDISTRIBUTIONLISTRESPONSE'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * deleteDistributionList
+	 * @param string $idDistributionList id of the distribution list
+	 * @return array informations
+	 */
+	function deleteDistributionList($idDistributionList)
+	{
+		$result = null;
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				'DeleteDistributionListRequest id="'.$idDistributionList.'"'
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * getDistributionList
+	 * @param string $idDistributionList id of the distribution list
+	 * @return array informations
+	 */
+	function getDistributionList($idOrNameDistributionList, $type = "auto")
+	{
+		if($type == "auto")
+			$realType = getDistributionListType($idOrNameDistributionList);
+		else
+			$realType = $type;
+			
+		$result = null;
+		
+		$params = array(
+			new SoapVar('<dl by="'.$realType.'">' . $idOrNameDistributionList . '</dl>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				'GetDistributionListRequest',
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY']['GETDISTRIBUTIONLISTRESPONSE'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * addDistributionListMember
+	 * @param string $idDistributionList name of the distribution list
+	 * @param string $memberEmail email of the member to add
+	 * @return array informations
+	 */
+	function addDistributionListMember($idDistributionList,$memberEmail)
+	{
+		$result = null;
+
+		$params = array(
+			new SoapVar('<id>' . $idDistributionList . '</id>', XSD_ANYXML),
+			new SoapVar('<dlm>' . $memberEmail . '</dlm>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				'AddDistributionListMemberRequest',
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY'];//['ADDDISTRIBUTIONLISTMEMBERRESPONSE'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+	
+	/**
+	 * removeDistributionListMember
+	 * @param string $idDistributionList name of the distribution list
+	 * @param string $memberEmail email of the member to remove
+	 * @return array informations
+	 */
+	function removeDistributionListMember($idDistributionList,$memberEmail)
+	{
+		$result = null;
+
+		$params = array(
+			new SoapVar('<id>' . $idDistributionList . '</id>', XSD_ANYXML),
+			new SoapVar('<dlm>' . $memberEmail . '</dlm>', XSD_ANYXML),
+		);
+
+		try
+		{
+			$result = $this->auth->execSoapCall(
+				'RemoveDistributionListMemberRequest',
+				$params
+			);
+
+			$result = $result['SOAP:ENVELOPE']['SOAP:BODY'];//['RemoveDistributionListMemberResponse'];
+		}
+		catch (SoapFault $exception)
+		{
+			$result = $exception;
+		}
+
+		return $result;
+	}
+	
+}
+
+?>
