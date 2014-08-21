@@ -293,7 +293,9 @@
             });
             
             initAccountsGridButtons();
+            initAccountsGridPagingEvent();
             initDistributionListsGridButtons();
+            initDistributionListsGridPagingEvent();
             $("#emailaccounts #createnewaccount button")
                 .button({
                     icons: {primary: "ui-icon-plus"}
@@ -438,8 +440,22 @@
             setTimeout(function(){ $("#notification").hide("drop", { direction: "up" }, "slow"); },3000);
         }
         
+        function initAccountsGridPagingEvent()
+        {
+            $("#emailaccounts .datatable").on("draw.dt", function(){
+                initAccountsGridButtons();
+            });
+        }
+        
+        function initDistributionListsGridPagingEvent()
+        {
+            $("#distributionlists .datatable").on("draw.dt", function(){
+                initDistributionListsGridButtons();
+            });
+        }
+        
         function initAccountsGridButtons() {
-            $("#emailaccounts table td button.ui-icon-key")
+            $("#emailaccounts table td button.ui-icon-key:not(ui-widget)")
                 .button({
                     icons: {primary: "ui-icon-key"}
                 })
@@ -447,7 +463,7 @@
                     $("#txtpwmailaccount").val($(this).parentsUntil("tbody").last().find("td:first").html());
                     $("#changepassworddialog").dialog("open");
                 });
-            $("#emailaccounts table td button.ui-icon-trash")
+            $("#emailaccounts table td button.ui-icon-trash:not(ui-widget)")
                 .button({
                     icons: {primary: "ui-icon-trash"}
                 })
@@ -459,14 +475,14 @@
         
         function initDistributionListsGridButtons()
         {
-            $("#distributionlists table td button.ui-icon-person")
+            $("#distributionlists table td button.ui-icon-person:not(ui-widget)")
                 .button({
                     icons: {primary: "ui-icon-person"}
                 })
                 .on('click', function(){
                     loadDistributionListMembers(this);
                 });
-            $("#distributionlists table td button.ui-icon-trash")
+            $("#distributionlists table td button.ui-icon-trash:not(ui-widget)")
                 .button({
                     icons: {primary: "ui-icon-trash"}
                 })
@@ -505,7 +521,6 @@
                 $("#emailaccounts .datatable").DataTable({
                     "jQueryUI": true
                 });
-                initAccountsGridButtons();
             });
         }
         
@@ -524,7 +539,6 @@
                 $("#distributionlists .datatable").DataTable({
                     "jQueryUI": true
                 });
-                initDistributionListsGridButtons();
             });
         }
         
