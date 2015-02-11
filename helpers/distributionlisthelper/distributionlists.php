@@ -113,11 +113,14 @@ class DistributionLists{
         
         foreach($this->allDitributionLists as $listName => $listOptions)
         {
-            $result.='<tr data-list-id="'.$listOptions['ID'].'">'.PHP_EOL;
-            $result.='<td>'.$listName.'</td>'.PHP_EOL;
-            $result.='<td><button class="ui-icon-person">List Members</button></td>'.PHP_EOL;
-            $result.='<td><button class="ui-icon-trash">Delete List</button></td>'.PHP_EOL;
-            $result.='</tr>'.PHP_EOL;
+		if (preg_match('/\w{8}-\w{4}-\w{4}-\w{4}-\w{12}/',$listOptions['ID']))
+		{
+            		$result.='<tr data-list-id="'.$listOptions['ID'].'">'.PHP_EOL;
+            		$result.='<td>'.$listName.'</td>'.PHP_EOL;
+            		$result.='<td><button class="ui-icon-person">List Members</button></td>'.PHP_EOL;
+            		$result.='<td><button class="ui-icon-trash">Delete List</button></td>'.PHP_EOL;
+            		$result.='</tr>'.PHP_EOL;
+		}
         }
         
         return $result;
