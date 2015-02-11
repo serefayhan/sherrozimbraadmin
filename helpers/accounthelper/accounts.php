@@ -112,7 +112,7 @@ class Accounts{
     }
     
     public function getMailAccountCount(){
-        return $this->mailAccountCount;
+        return ($this->mailAccountCount)-1;
     }
     
     public function getDomainUsedSpace(){
@@ -128,14 +128,17 @@ class Accounts{
         
         foreach($this->allAccountsWithQuotas as $accountName => $accountOptions)
         {
-            $result.='<tr>'.PHP_EOL;
-            $result.='<td>'.$accountName.'</td>'.PHP_EOL;
-            $result.='<td>'.sprintf('%.2f',$accountOptions['USED']).'</td>'.PHP_EOL;
-            $result.='<td>'.sprintf('%.2f',$accountOptions['LIMIT']).'</td>'.PHP_EOL;
-            $result.='<td>'.$accountOptions['LASTLOGIN'].'</td>'.PHP_EOL;
-            $result.='<td><button class="ui-icon-key">Change Password</button></td>'.PHP_EOL;
-            $result.='<td><button class="ui-icon-trash">Delete Account</button></td>'.PHP_EOL;
-            $result.='</tr>'.PHP_EOL;
+		if (!preg_match('/galsync/',$accountName))
+		{
+			$result.='<tr>'.PHP_EOL;
+			$result.='<td>'.$accountName.'</td>'.PHP_EOL;
+			$result.='<td>'.sprintf('%.2f',$accountOptions['USED']).'</td>'.PHP_EOL;
+			$result.='<td>'.sprintf('%.2f',$accountOptions['LIMIT']).'</td>'.PHP_EOL;
+			$result.='<td>'.$accountOptions['LASTLOGIN'].'</td>'.PHP_EOL;
+			$result.='<td><button class="ui-icon-key">Change Password</button></td>'.PHP_EOL;
+			$result.='<td><button class="ui-icon-trash">Delete Account</button></td>'.PHP_EOL;
+			$result.='</tr>'.PHP_EOL;
+		}
         }
         
         return $result;
