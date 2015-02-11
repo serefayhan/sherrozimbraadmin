@@ -29,9 +29,12 @@ class DistributionLists{
                 $this->distributionListsCount = count($distributionLists['DL']);
                 
                 foreach($distributionLists['DL'] as $list){
-                    $this->allDitributionLists[$list['NAME']] = array(
-                        'ID' => $list['ID']
-                    );
+			if(isset($list['NAME'])) 
+			{
+                    		$this->allDitributionLists[$list['NAME']] = array(
+                        		'ID' => $list['ID']
+                    		);
+			}
                 }
                 
                 unset($distributionLists);
